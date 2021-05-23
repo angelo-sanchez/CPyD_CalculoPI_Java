@@ -15,9 +15,15 @@ public class Main {
 	public static void main(String[] args) {
 		boolean runInParallel = false; // por defecto se hará secuencial.
 		long numSteps = Constants.DEFAULT_NUM_STEPS; // por defecto el valor es de 100.000
+		int repeticiones = Constants.ROUNDS;
 		if (args.length > 0) {
-			runInParallel = "-p".equals(args[0]);
-			numSteps = args.length > 1 ? Long.parseLong(args[1]) : numSteps;
+			CommandLineUtil cli = new CommandLineUtil(args);
+			cli.printHelp();
+			runInParallel = cli.isParallel();
+			numSteps = cli.getNumSteps() == null ? numSteps : cli.getNumSteps();
+			repeticiones = cli.getRepeticiones() == null ? repeticiones : cli.getRepeticiones()
+					.intValue() + 1; // Una ronda más, ya que se descarta la primera.
+			umbral = cli.getUmbral() == null ? umbral : cli.getUmbral();
 		}
 		System.out.printf("Usando la version %s%n", runInParallel ? "paralela" : "secuencial");
 		final double PI, step = 1.0 / numSteps;
