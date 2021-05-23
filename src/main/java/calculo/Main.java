@@ -25,16 +25,43 @@ public class Main {
 					.intValue() + 1; // Una ronda más, ya que se descarta la primera.
 			umbral = cli.getUmbral() == null ? umbral : cli.getUmbral();
 		}
+
 		System.out.printf("Usando la version %s%n", runInParallel ? "paralela" : "secuencial");
-		final double PI, step = 1.0 / numSteps;
-		final long start = System.currentTimeMillis();
-		if (runInParallel) {
-			PI = step * new ForkJoinCalculator(step, 0, numSteps)
-					.compute();
-		} else {
-			PI = step * calculoSecuencial(step, 0, numSteps);
+		double tiempo = promedioTiempoEjecucion(numSteps, repeticiones, runInParallel);
+		System.out.printf("Tiempo promedio de ejecución: %s%n", tiempo);
+	}
+
+	private static double promedioTiempoEjecucion(long numSteps, int repeticiones, boolean runInParallel) {
+		long[] ejecuciones = new long[repeticiones];
+		for (int i = 0; i < ejecuciones.length; ++i) {
+			ejecuciones[i] = runInParallel ? tiempoCalculoParalelo(numSteps) : tiempoCalculoSecuencial(numSteps);
 		}
-		final long end = System.currentTimeMillis();
-		System.out.println("PI aproximado: " + PI + " | Tiempo: " + (end - start) + " ms.");
+		long suma = -ejecuciones[0]; // Para no contar el primer tiempo
+		for (long tiempo : ejecuciones) {
+			suma += tiempo;
+		}
+
+		return (double) suma / (double) (repeticiones - 1);
+	}
+
+	public static long tiempoCalculoParalelo(long numSteps) {
+		double h = 1.0D / (double) numSteps;
+		long start = System.currentTimeMillis();
+		ForkJoinCalculator calculator = new ForkJoinCalculator(h, 0L, numSteps);
+		double computed = calculator.compute();
+		long end = System.currentTimeMillis();
+		final double PI = computed * h;
+		System.out.printf("PI Aproximado: %s | Tiempo transcurrido: %dms.%n", PI, end - start);
+		return end - start;
+	}
+
+	public static long tiempoCalculoSecuencial(long numSteps) {
+		double h = 1.0D / (double) numSteps;
+		long start = System.currentTimeMillis();
+		double computed = calculoSecuencial(h, 0L, numSteps);
+		long end = System.currentTimeMillis();
+		final double PI = computed * h;
+		System.out.printf("PI Aproximado: %s | Tiempo transcurrido: %dms.%n", PI, end - start);
+		return end - start;
 	}
 }
